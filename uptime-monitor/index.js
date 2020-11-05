@@ -4,8 +4,21 @@ const url = require("url");
 
 // the server should respond to all request with a string
 const server = http.createServer((req, res) => {
+  // get the url and parse it
+  const parsedUrl = url.parse(req.url, true);
+
+  // get the path
+  const path = parsedUrl.pathname;
+  // localhost:3000/ return ""
+  // localhost:3000/foo return foo
+  // localhost:3000/foo/bar return foo/bar
+  const trimmedPath = path.replace(/^\/+|\/+$/g, "");
+
   // send the response
   res.end("Hello world!\n");
+
+  // log the request path
+  console.log(`Request recieve on path:${trimmedPath}`);
 });
 
 // start the server and have it listen to port 3000
