@@ -14,6 +14,9 @@ const server = http.createServer((req, res) => {
   // localhost:3000/foo/bar return foo/bar
   const trimmedPath = path.replace(/^\/+|\/+$/g, "");
 
+  // get query string as an object
+  const queryStringObj = parsedUrl.query;
+
   // get the method
   const method = req.method.toUpperCase();
 
@@ -21,7 +24,20 @@ const server = http.createServer((req, res) => {
   res.end("Hello world!\n");
 
   // log the request path
-  console.log(`Request recieve on path:${trimmedPath} with method: ${method}`);
+  console.log(
+    `Request recieve on path:${trimmedPath} with method: ${method} and with these query string parameter: ${JSON.stringify(
+      queryStringObj
+    )}`
+  );
+  // console.log(
+  //   "Request recieve on path: " +
+  //     trimmedPath +
+  //     "with method: " +
+  //     method +
+  //     "and with these query string parameter: " +
+  //     queryStringObj
+  // );
+  console.log(queryStringObj);
 });
 
 // start the server and have it listen to port 3000
