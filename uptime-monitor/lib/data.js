@@ -3,6 +3,7 @@
 // dependencies
 const fs = require("fs");
 const path = require("path");
+const helpers = require("../../../../../Downloads/github/The-NodeJS-Master-Class-master/Section 3/Service 2 - Users/lib/helpers");
 
 // container for the module (to be exported)
 const lib = {};
@@ -42,7 +43,7 @@ lib.create = (dir, file, data, cb) => {
 // read the file
 lib.read = (dir, file, cb) => {
   fs.readFile(`${lib.baseDir}/${dir}/${file}.json`, "utf8", (err, data) => {
-    cb(err, data);
+    cb(err, helpers.parseJsonToObject(data));
   });
 };
 

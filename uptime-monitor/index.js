@@ -4,7 +4,9 @@ const https = require("https");
 const url = require("url");
 const fs = require("fs");
 const { StringDecoder } = require("string_decoder");
-const { httpPort, httpsPort, envName } = require("./config");
+const { httpPort, httpsPort, envName } = require("./lib/config");
+const { notFound, ping, users } = require("./lib/handlers");
+const helpers = require("./lib/helpers");
 
 // instantiate "http" server
 const httpServer = http.createServer((req, res) => {
@@ -49,7 +51,7 @@ const unifiedServer = (req, res) => {
   const headers = req.headers;
 
   // get the method
-  const method = req.method.toUpperCase();
+  const method = req.method.toLowerCase();
 
   // get payload if there is any
   const decoder = new StringDecoder("utf-8");
@@ -67,14 +69,14 @@ const unifiedServer = (req, res) => {
     const chosenHandler =
       typeof router[trimmedPath] !== "undefined"
         ? router[trimmedPath]
-        : handlers.notFound;
+        : notFound;
 
     const data = {
       trimmedPath: trimmedPath,
       queryStringObj: queryStringObj,
       method: method,
       headers: headers,
-      payload: buffer,
+      payload: helpers.parseJsonToObject(buffer),
     };
 
     // route the request to the handler specified in the router
@@ -98,21 +100,8 @@ const unifiedServer = (req, res) => {
   });
 };
 
-// Define handler
-const handlers = {};
-
-// sampler handler
-handlers.ping = (data, cb) => {
-  // callback a http status code and payload object
-  cb(200);
-};
-
-// not found
-handlers.notFound = (data, cb) => {
-  cb(404);
-};
-
 // define a request router
 const router = {
-  ping: handlers.ping,
+  ping: ping,
+  users: users,
 };
