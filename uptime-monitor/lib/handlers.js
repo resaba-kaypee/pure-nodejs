@@ -99,7 +99,6 @@ handlers._users.post = (data, cb) => {
 // users - get
 // required data: phone
 // optional data: none
-// @TODO - only let an authenticated user access their own object
 handlers._users.get = (data, cb) => {
   // check the phone if valid
   const parsedObj = helpers.parseJsonToObject(data.queryStringObj);
@@ -109,15 +108,28 @@ handlers._users.get = (data, cb) => {
       : false;
 
   if (phone) {
-    // look up user
-    _data.read("users", phone, (err, userData) => {
-      if (!err && userData) {
-        // remove the hashed password from the user object before returning
-        delete userData.hashedPassword;
-        cb(200, userData);
+    // get the token from the headers
+    const token =
+      typeof data.headers.token === "string" ? data.headers.token : false;
+
+    // verify that the given token is valid for the phone number
+    handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+      if (tokenIsValid) {
+        // look up user
+        _data.read("users", phone, (err, userData) => {
+          if (!err && userData) {
+            // remove the hashed password from the user object before returning
+            delete userData.hashedPassword;
+            cb(200, userData);
+          } else {
+            console.log(err);
+            cb(404);
+          }
+        });
       } else {
-        console.log(err);
-        cb(404);
+        cb(403, {
+          Error: "Missing required token in header / token is invalid.",
+        });
       }
     });
   } else {
@@ -128,7 +140,6 @@ handlers._users.get = (data, cb) => {
 // users - put
 // required data: phone
 // optional data: firstName, lastName, password (at least one must be specified)
-// @TODO - only let an authenticated user access their own object
 handlers._users.put = (data, cb) => {
   // check for required field
   const phone =
@@ -160,32 +171,44 @@ handlers._users.put = (data, cb) => {
   if (phone) {
     // error if nothing is sent to update
     if (firstName || lastName || password) {
-      // look up user
-      _data.read("users", phone, (err, userData) => {
-        if (!err && userData) {
-          // update user
-          if (firstName) {
-            userData.firstName = firstName;
-          }
-          if (lastName) {
-            userData.lastName = lastName;
-          }
-          if (password) {
-            userData.hashedPassword = helpers.hash(password);
-          }
+      // get the token from the headers
+      const token =
+        typeof data.headers.token === "string" ? data.headers.token : false;
+      // verify that the given token is valid for the phone number
+      handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+        if (tokenIsValid) {
+          // look up user
+          _data.read("users", phone, (err, userData) => {
+            if (!err && userData) {
+              // update user
+              if (firstName) {
+                userData.firstName = firstName;
+              }
+              if (lastName) {
+                userData.lastName = lastName;
+              }
+              if (password) {
+                userData.hashedPassword = helpers.hash(password);
+              }
 
-          // store the new updates
-          _data.update("users", phone, userData, (err) => {
-            if (!err) {
-              cb(200);
+              // store the new updates
+              _data.update("users", phone, userData, (err) => {
+                if (!err) {
+                  cb(200);
+                } else {
+                  console.log(err);
+                  cb(400, { Error: "Failed to update user" });
+                }
+              });
             } else {
               console.log(err);
-              cb(400, { Error: "Failed to update user" });
+              cb(400, { Error: "User does not exist." });
             }
           });
         } else {
-          console.log(err);
-          cb(400, { Error: "User does not exist." });
+          cb(403, {
+            Error: "Missing required token in header / token is invalid.",
+          });
         }
       });
     } else {
@@ -199,7 +222,6 @@ handlers._users.put = (data, cb) => {
 // users - delete
 // required data: phone
 // optional data: none
-// @TODO - only let an authenticated user access their own object
 // @TODO - delete any other files associated with the user
 handlers._users.delete = (data, cb) => {
   // check the phone if valid
@@ -210,18 +232,30 @@ handlers._users.delete = (data, cb) => {
       : false;
 
   if (phone) {
-    // look up user
-    _data.read("users", phone, (err, userData) => {
-      if (!err && userData) {
-        _data.delete("users", phone, (err) => {
-          if (!err) {
-            cb(200);
+    // get the token from the headers
+    const token =
+      typeof data.headers.token === "string" ? data.headers.token : false;
+    // verify that the given token is valid for the phone number
+    handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+      if (tokenIsValid) {
+        // look up user
+        _data.read("users", phone, (err, userData) => {
+          if (!err && userData) {
+            _data.delete("users", phone, (err) => {
+              if (!err) {
+                cb(200);
+              } else {
+                cb(500, { Error: "Could not delete user." });
+              }
+            });
           } else {
-            cb(500, { Error: "Could not delete user." });
+            cb(400, { Error: "Could not find user." });
           }
         });
       } else {
-        cb(400, { Error: "Could not find user." });
+        cb(403, {
+          Error: "Missing required token in header / token is invalid.",
+        });
       }
     });
   } else {
@@ -393,6 +427,23 @@ handlers._tokens.delete = (data, cb) => {
   } else {
     cb(400, { Error: "Missing required field." });
   }
+};
+
+// verify the given token id is currently valid for a given user
+handlers._tokens.verifyToken = (id, phone, cb) => {
+  // look up the token
+  _data.read("tokens", id, (err, tokenData) => {
+    if (!err && tokenData) {
+      // check if token if not expire for the given user
+      if (tokenData.phone === phone && tokenData.expires > Date.now()) {
+        cb(true);
+      } else {
+        cb(false);
+      }
+    } else {
+      cb(false);
+    }
+  });
 };
 
 // sampler handler
