@@ -5,7 +5,7 @@ const url = require("url");
 const fs = require("fs");
 const { StringDecoder } = require("string_decoder");
 const { httpPort, httpsPort, envName } = require("./lib/config");
-const { notFound, ping, users } = require("./lib/handlers");
+const { notFound, ping, users, tokens } = require("./lib/handlers");
 const helpers = require("./lib/helpers");
 
 // instantiate "http" server
@@ -104,4 +104,5 @@ const unifiedServer = (req, res) => {
 const router = {
   ping: ping,
   users: users,
+  tokens: tokens,
 };
