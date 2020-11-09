@@ -1,6 +1,7 @@
 // request handlers
 const { users } = require("./userHandlers");
 const { tokens } = require("./tokenHandlers");
+const { checks } = require("./checkHandlers");
 
 // sampler handler
 const ping = (data, cb) => {
@@ -13,4 +14,4 @@ const notFound = (data, cb) => {
   cb(404);
 };
 
-module.exports = { ping, notFound, users, tokens };
+module.exports = { ping, notFound, users, tokens, checks };

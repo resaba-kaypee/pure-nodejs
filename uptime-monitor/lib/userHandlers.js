@@ -1,6 +1,7 @@
 // dependencies
 const _data = require("./data");
 const helpers = require("./helpers");
+const { _tokens } = require("./tokenHandlers");
 
 // define handler
 const handlers = {};
@@ -110,7 +111,7 @@ handlers._users.get = (data, cb) => {
       typeof data.headers.token === "string" ? data.headers.token : false;
 
     // verify that the given token is valid for the phone number
-    handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+    _tokens.verifyToken(token, phone, (tokenIsValid) => {
       if (tokenIsValid) {
         // look up user
         _data.read("users", phone, (err, userData) => {
@@ -172,7 +173,7 @@ handlers._users.put = (data, cb) => {
       const token =
         typeof data.headers.token === "string" ? data.headers.token : false;
       // verify that the given token is valid for the phone number
-      handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+      _tokens.verifyToken(token, phone, (tokenIsValid) => {
         if (tokenIsValid) {
           // look up user
           _data.read("users", phone, (err, userData) => {
@@ -219,7 +220,6 @@ handlers._users.put = (data, cb) => {
 // users - delete
 // required data: phone
 // optional data: none
-// @TODO - delete any other files associated with the user
 handlers._users.delete = (data, cb) => {
   // check the phone if valid
   const parsedObj = helpers.parseJsonToObject(data.queryStringObj);
@@ -233,14 +233,48 @@ handlers._users.delete = (data, cb) => {
     const token =
       typeof data.headers.token === "string" ? data.headers.token : false;
     // verify that the given token is valid for the phone number
-    handlers._tokens.verifyToken(token, phone, (tokenIsValid) => {
+    _tokens.verifyToken(token, phone, (tokenIsValid) => {
       if (tokenIsValid) {
         // look up user
         _data.read("users", phone, (err, userData) => {
           if (!err && userData) {
             _data.delete("users", phone, (err) => {
               if (!err) {
-                cb(200);
+                // delete the checks associated with the user
+                const checks =
+                  typeof userData.checks === "object" &&
+                  userData.checks instanceof Array
+                    ? userData.checks
+                    : [];
+
+                const checksToDelete = checks.length;
+
+                if (checksToDelete > 0) {
+                  let checksDeleted = 0;
+                  let deletionErrors = false;
+
+                  // tru the checks that needed to be deleted
+                  checks.forEach((checkId) => {
+                    // delete the check
+                    _data.delete("checks", checkId, (err) => {
+                      if (err) {
+                        deletionErrors = true;
+                      }
+                      checksDeleted++;
+                      if (checksDeleted === checksToDelete) {
+                        if (!deletionErrors) {
+                          cb(200);
+                        } else {
+                          cb(500, {
+                            Error: `Errors encountered attempting to delete all of user's checks. All checks may not have been deleted from the system successfully.`,
+                          });
+                        }
+                      }
+                    });
+                  });
+                } else {
+                  cb(200);
+                }
               } else {
                 cb(500, { Error: "Could not delete user." });
               }
