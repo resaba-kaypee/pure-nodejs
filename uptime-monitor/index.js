@@ -8,6 +8,11 @@ const { httpPort, httpsPort, envName } = require("./lib/config");
 const { notFound, ping, users, tokens, checks } = require("./lib/handlers");
 const helpers = require("./lib/helpers");
 
+// Test twilio
+helpers.sendTwilioSms("9053730081", "Hellow!", (err) => {
+  console.log(`This was the error: ${err}`);
+});
+
 // instantiate "http" server
 const httpServer = http.createServer((req, res) => {
   unifiedServer(req, res);

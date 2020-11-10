@@ -3,7 +3,6 @@ const _data = require("./data");
 const helpers = require("./helpers");
 const config = require("../lib/config");
 const { _tokens } = require("./tokenHandlers");
-const { time } = require("console");
 
 // define handler conatainer
 const handlers = {};

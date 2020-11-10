@@ -1,6 +1,8 @@
 // helpers for various task
 const crypto = require("crypto");
 const config = require("./config");
+const https = require("https");
+const querystring = require("querystring");
 
 // helper containers
 const helpers = {};
@@ -50,6 +52,68 @@ helpers.createRandomStr = (strLength) => {
     return str;
   } else {
     return false;
+  }
+};
+
+// send sms via twilio
+helpers.sendTwilioSms = (phone, msg, cb) => {
+  // validate params
+  phone =
+    typeof phone === "string" && phone.trim().length === 10
+      ? phone.trim()
+      : false;
+  msg =
+    typeof msg === "string" &&
+    msg.trim().length > 0 &&
+    msg.trim().length <= 1600
+      ? msg.trim()
+      : false;
+
+  if (phone && msg) {
+    // configure the request payload
+    const payload = {
+      From: config.twilio.fromPhone,
+      To: `+63${phone}`,
+      Body: msg,
+    };
+    const strPayload = querystring.stringify(payload);
+    // config the request details
+    const requestDetails = {
+      protocol: "https:",
+      hostname: "api.twilio.com",
+      path: `/2010-04-01/Accounts/${config.twilio.accountSid}/Messages.json`,
+      auth: `${config.twilio.accountSid}${config.twilio.authToken}`,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Length": Buffer.byteLength(strPayload),
+      },
+    };
+
+    // instantiate the request object
+    const req = https.request(requestDetails, (res) => {
+      // grab the status of the sent request
+      const status = res.statusCode;
+
+      // callback if the request went trough
+      if (status === 200 || status === 201) {
+        cb(false);
+      } else {
+        cb(`Status code returned was ${status}`);
+      }
+    });
+
+    // bind to the error event so it doesn't get thrown
+    req.on("error", (e) => {
+      cb(e);
+    });
+
+    // add the payload
+    req.write(strPayload);
+
+    // end the request
+    req.end();
+  } else {
+    cb("Given parameter were missing or invalid.");
   }
 };
 
