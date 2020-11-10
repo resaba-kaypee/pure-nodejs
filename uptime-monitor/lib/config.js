@@ -11,9 +11,9 @@ environments.staging = {
   hashingSecret: "SS:gdf09gD8sd9GDf783s3df",
   maxChecks: 5,
   twilio: {
-    accountSid: "",
-    authToken: "",
-    fromPhone: "",
+    accountSid: "AC3b02dcfe4f71a4cb06f88aff61174908",
+    authToken: "2713bfd392a410aeaf0885d14b2b428f",
+    fromPhone: "+12056795175",
   },
 };
 
@@ -24,11 +24,6 @@ environments.production = {
   envName: "production",
   hashingSecret: "SS:gdf09gD8sd9GDf783s3df",
   maxChecks: 5,
-  twilio: {
-    accountSid: "ACb32d411ad7fe886aac54c665d25e5c5d",
-    authToken: "9455e3eb3109edc12e3d8c92768f7a67",
-    fromPhone: "+15005550006",
-  },
 };
 
 // determine which env was passed as a command-line argument

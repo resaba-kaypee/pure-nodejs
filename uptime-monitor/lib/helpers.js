@@ -72,8 +72,8 @@ helpers.sendTwilioSms = (phone, msg, cb) => {
   if (phone && msg) {
     // configure the request payload
     const payload = {
-      From: config.twilio.fromPhone,
       To: `+63${phone}`,
+      From: config.twilio.fromPhone,
       Body: msg,
     };
     const strPayload = querystring.stringify(payload);
@@ -81,8 +81,9 @@ helpers.sendTwilioSms = (phone, msg, cb) => {
     const requestDetails = {
       protocol: "https:",
       hostname: "api.twilio.com",
+      method: "POST",
       path: `/2010-04-01/Accounts/${config.twilio.accountSid}/Messages.json`,
-      auth: `${config.twilio.accountSid}${config.twilio.authToken}`,
+      auth: `${config.twilio.accountSid}:${config.twilio.authToken}`,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         "Content-Length": Buffer.byteLength(strPayload),
