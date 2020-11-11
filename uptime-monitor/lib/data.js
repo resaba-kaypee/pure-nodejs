@@ -93,5 +93,20 @@ lib.delete = (dir, file, cb) => {
   });
 };
 
+// list all the items in a directory
+lib.list = (dir, cb) => {
+  fs.readdir(`${lib.baseDir}/${dir}/`, (err, data) => {
+    if (!err && data && data.length > 0) {
+      const trimmedFileNames = [];
+      data.forEach((fileName) => {
+        trimmedFileNames.push(fileName.replace(".json", ""));
+      });
+      cb(false, trimmedFileNames);
+    } else {
+      cb(err, data);
+    }
+  });
+};
+
 // export the module
 module.exports = lib;
