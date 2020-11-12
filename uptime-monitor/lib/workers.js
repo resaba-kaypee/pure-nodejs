@@ -9,6 +9,7 @@ const https = require("https");
 const url = require("url");
 const _data = require("./data");
 const helpers = require("./helpers");
+const _logs = require("./logs");
 const path = require("path");
 
 // instanstiate worker
@@ -147,7 +148,7 @@ workers.performCheck = (originalCheckData) => {
     checkOutcome.responseCode = status;
 
     if (!outcomeSent) {
-      workers.processOutCome(originalCheckData, checkOutcome);
+      workers.processCheckOutcome(originalCheckData, checkOutcome);
       outcomeSent = true;
     }
   });
@@ -161,7 +162,7 @@ workers.performCheck = (originalCheckData) => {
     };
 
     if (!outcomeSent) {
-      workers.processOutCome(originalCheckData, checkOutcome);
+      workers.processCheckOutcome(originalCheckData, checkOutcome);
       outcomeSent = true;
     }
   });
@@ -175,7 +176,7 @@ workers.performCheck = (originalCheckData) => {
     };
 
     if (!outComeSent) {
-      workers.processOutCome(originalCheckData, checkOutcome);
+      workers.processCheckOutcome(originalCheckData, checkOutcome);
       outcomeSent = true;
     }
   });
@@ -186,7 +187,7 @@ workers.performCheck = (originalCheckData) => {
 
 // process the check outcome, update the check data as needed, trigger an alert to user if needed
 // special logic for accomodating a check that has never been tested before (dont alert)
-workers.processOutCome = (originalCheckData, checkOutcome) => {
+workers.processCheckOutcome = (originalCheckData, checkOutcome) => {
   // decide if the check is considered up or down
   const state =
     !checkOutcome.error &&
@@ -201,10 +202,24 @@ workers.processOutCome = (originalCheckData, checkOutcome) => {
       ? true
       : false;
 
+  // log the outcome
+  const timeOfCheck = Date.now();
+
+  workers.log(
+    originalCheckData,
+    checkOutcome,
+    alertWarranted,
+    state,
+    timeOfCheck
+  );
+
   // update the check data
   const newCheckData = originalCheckData;
   newCheckData.state = state;
-  newCheckData.lastChecked = Date.now();
+  newCheckData.lastChecked = timeOfCheck;
+
+  // ==>> check if online
+  console.log(checkOutcome, state, alertWarranted);
 
   // save the updates
   _data.update("checks", newCheckData.id, newCheckData, (err) => {
@@ -248,11 +263,81 @@ workers.alertUserToStatusChange = ({ method, protocol, url, state }) => {
   );
 };
 
+workers.log = (
+  originalCheckData,
+  checkOutcome,
+  alertWarranted,
+  state,
+  timeOfCheck
+) => {
+  // form the log data
+  const logData = {
+    check: originalCheckData,
+    outcome: checkOutcome,
+    state: state,
+    alert: alertWarranted,
+    time: timeOfCheck,
+  };
+
+  // convert data to a string
+  const logString = JSON.stringify(logData);
+
+  // determine the name of the log file
+  const logFileName = originalCheckData.id;
+
+  // append the log string to the file
+  _logs.append(logFileName, logString, (err) => {
+    if (!err) {
+      console.log("Logging to file succeeded.");
+    } else {
+      console.log("Logging to file failed.");
+    }
+  });
+};
+
 // timer to execute the worker process per minute
 workers.loop = () => {
   setInterval(() => {
     workers.gatherAllChecks();
-  }, 1000 * 60);
+  }, 1000 * 60); // 1 minute
+};
+
+// rotate (compress) the log files
+workers.rotateLogs = () => {
+  _logs.list(false, (err, logs) => {
+    // list all the (non-compressed) log files
+    if (!err && logs && logs.length > 0) {
+      logs.forEach((logName) => {
+        // compress data to a diffent file
+        const logId = logName.replace(".log", "");
+        const newFileId = `${logId}-${Date.now()}`;
+
+        _logs.compress(logId, newFileId, (err) => {
+          if (!err) {
+            // truncate the log
+            _logs.truncate(logId, (err) => {
+              if (!err) {
+                console.log("Success truncating log file.");
+              } else {
+                console.log("Error truncating log file.");
+              }
+            });
+          } else {
+            console.log("Error compressing the log files.", err);
+          }
+        });
+      });
+    } else {
+      console.log("Error: Could not find any logs to rotate.");
+    }
+  });
+};
+
+// timer to execute the log-rotation process once per day
+workers.logRotationLoop = () => {
+  setInterval(() => {
+    workers.rotateLogs();
+  }, 1000 * 60 * 60 * 24); // 24 hrs
 };
 
 // init workers
@@ -261,6 +346,10 @@ workers.init = () => {
   workers.gatherAllChecks();
   // call the loop so the checks will execute later on
   workers.loop();
+  // compress all the logs immediately
+  workers.rotateLogs();
+  // call the compression loop so logs will be compress later on
+  workers.logRotationLoop();
 };
 
 module.exports = workers;
