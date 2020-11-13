@@ -3,6 +3,8 @@ const crypto = require("crypto");
 const config = require("./config");
 const https = require("https");
 const querystring = require("querystring");
+const path = require("path");
+const fs = require("fs");
 
 // helper containers
 const helpers = {};
@@ -116,6 +118,78 @@ helpers.sendTwilioSms = (phone, msg, cb) => {
   } else {
     cb("Given parameter were missing or invalid.");
   }
+};
+
+// get the string content of a template
+helpers.getTemplate = (templateName, data, cb) => {
+  templateName =
+    typeof templateName === "string" && templateName.length > 0
+      ? templateName
+      : false;
+  data = typeof data === "object" && data !== null ? data : {};
+
+  if (templateName) {
+    const templatesDir = path.join(__dirname, "/../templates/");
+    fs.readFile(`${templatesDir}${templateName}.html`, "utf8", (err, str) => {
+      if (!err && str && str.length > 0) {
+        // do the interpolation on the string
+        const finalStr = helpers.interpolate(str, data);
+        cb(false, finalStr);
+      } else {
+        cb("No template can be found.");
+      }
+    });
+  } else {
+    cb("A valid template name was not specified");
+  }
+};
+
+// add the universal header and footer to a string, and pass provided data obj to header and footer for interpolation
+helpers.addUniversalTemplate = (str, data, cb) => {
+  str = typeof str === "string" && str.length > 0 ? str : "";
+  data = typeof data === "object" && data !== null ? data : {};
+
+  // get the header
+  helpers.getTemplate("_header", data, (err, headerStr) => {
+    if (!err && headerStr) {
+      // get the footer
+      helpers.getTemplate("_footer", data, (err, footerStr) => {
+        if (!err && footerStr) {
+          // add them all together
+          const fullStr = headerStr + str + footerStr;
+          cb(false, fullStr);
+        } else {
+          cb("Could not find the footer template.");
+        }
+      });
+    } else {
+      cb("Could not find the header template.");
+    }
+  });
+};
+
+// take a given string and a data object and find/replace all the keys within it
+helpers.interpolate = (str, data) => {
+  str = typeof str === "string" && str.length > 0 ? str : "";
+  data = typeof data === "object" && data !== null ? data : {};
+
+  // add the templateGlobals to the data object, prepending their key name with "globals"
+  for (let keyName in config.templateGlobals) {
+    if (config.templateGlobals.hasOwnProperty(keyName)) {
+      data["global." + keyName] = config.templateGlobals[keyName];
+    }
+  }
+
+  // for each kay in the object, insert its value into the string at the corresponding obj
+  for (let key in data) {
+    if (data.hasOwnProperty(key) && typeof data[key] === "string") {
+      const replace = data[key];
+      const find = `{${key}}`;
+      str = str.replace(find, replace);
+    }
+  }
+
+  return str;
 };
 
 module.exports = helpers;

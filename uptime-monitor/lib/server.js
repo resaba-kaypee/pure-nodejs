@@ -10,6 +10,17 @@ const fs = require("fs");
 const { StringDecoder } = require("string_decoder");
 const { httpPort, httpsPort, envName } = require("./config");
 const { notFound, ping, users, tokens, checks } = require("./handlers");
+const {
+  index,
+  accountCreate,
+  accountEdit,
+  accountDeleted,
+  sessionCreate,
+  sessionDeleted,
+  checksList,
+  checksCreate,
+  checksEdit,
+} = require("./viewHandlers");
 const helpers = require("./helpers");
 const path = require("path");
 const util = require("util");
@@ -89,18 +100,31 @@ server.unifiedServer = (req, res) => {
     };
 
     // route the request to the handler specified in the router
-    chosenHandler(data, (statusCode, payload) => {
+    chosenHandler(data, (statusCode, payload, contentType) => {
+      // determine the type of response (fallback to JSON)
+      contentType = typeof contentType === "string" ? contentType : "json";
+
       // use the status code callback by the handler, or default to 200
       statusCode = typeof statusCode === "number" ? statusCode : 200;
 
-      // use the payload callback by the handler, or default to an empty  object
-      payload = typeof payload === "object" ? payload : {};
-
       // convert the payload to a string
-      const payloadString = JSON.stringify(payload);
+      let payloadString = "";
 
-      // return a response to client
-      res.setHeader("Content-Type", "application/json");
+      if (contentType === "json") {
+        res.setHeader("Content-Type", "application/json");
+        // use the payload callback by the handler, or default to an empty  object
+        payload = typeof payload === "object" ? payload : {};
+        payloadString = JSON.stringify(payload);
+      }
+
+      if (contentType === "html") {
+        res.setHeader("Content-Type", "text/html");
+        payloadString = typeof payload === "string" ? payload : "";
+      }
+
+      // return the response parts that are content specific
+
+      // return the response parts that are common to all content types
       res.writeHead(statusCode);
       res.end(payloadString);
 
@@ -122,10 +146,19 @@ server.unifiedServer = (req, res) => {
 
 // define a request router
 server.router = {
+  "": index,
+  "account/create": accountCreate,
+  "account/edit": accountEdit,
+  "account/deleted": accountDeleted,
+  "session/create": sessionCreate,
+  "session/deleted": sessionDeleted,
+  "checks/all": checksList,
+  "checks/create": checksCreate,
+  "checks/edit": checksEdit,
+  "api/users": users,
+  "api/tokens": tokens,
+  "api/checks": checks,
   ping: ping,
-  users: users,
-  tokens: tokens,
-  checks: checks,
 };
 
 // init script

@@ -15,6 +15,12 @@ environments.staging = {
     authToken: "2713bfd392a410aeaf0885d14b2b428f",
     fromPhone: "+12056795175",
   },
+  templateGlobals: {
+    appName: "UptimeChecker",
+    companyName: "NotARealCompany, Inc.",
+    yearCreated: "2020",
+    baseUrl: "http://localhost:3000/",
+  },
 };
 
 // production env
@@ -24,6 +30,17 @@ environments.production = {
   envName: "production",
   hashingSecret: "SS:gdf09gD8sd9GDf783s3df",
   maxChecks: 5,
+  twilio: {
+    accountSid: "",
+    authToken: "",
+    fromPhone: "",
+  },
+  templateGlobals: {
+    appName: "UptimeChecker",
+    companyName: "NotARealCompany, Inc.",
+    yearCreated: "2020",
+    baseUrl: "http://localhost:5000/",
+  },
 };
 
 // determine which env was passed as a command-line argument
