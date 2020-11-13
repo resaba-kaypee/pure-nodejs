@@ -20,6 +20,8 @@ const {
   checksList,
   checksCreate,
   checksEdit,
+  public,
+  favicon,
 } = require("./viewHandlers");
 const helpers = require("./helpers");
 const path = require("path");
@@ -86,10 +88,14 @@ server.unifiedServer = (req, res) => {
     buffer += decoder.end();
 
     // choose the handler this request should go to
-    const chosenHandler =
+    let chosenHandler =
       typeof server.router[trimmedPath] !== "undefined"
         ? server.router[trimmedPath]
         : notFound;
+
+    // if the request is within the public directory, use the public handler instead
+    chosenHandler =
+      trimmedPath.indexOf("public/") > -1 ? public : chosenHandler;
 
     const data = {
       trimmedPath: trimmedPath,
@@ -120,6 +126,28 @@ server.unifiedServer = (req, res) => {
       if (contentType === "html") {
         res.setHeader("Content-Type", "text/html");
         payloadString = typeof payload === "string" ? payload : "";
+      }
+
+      if (contentType === "favicon") {
+        res.setHeader("Content-Type", "image/x-icon");
+        payloadString = typeof payload !== undefined ? payload : "";
+      }
+      if (contentType === "css") {
+        res.setHeader("Content-Type", "text/css");
+        payloadString = typeof payload !== undefined ? payload : "";
+      }
+      if (contentType === "png") {
+        res.setHeader("Content-Type", "image/png");
+        payloadString = typeof payload !== undefined ? payload : "";
+      }
+      if (contentType === "jpg") {
+        res.setHeader("Content-Type", "image/jpeg");
+        payloadString = typeof payload !== undefined ? payload : "";
+      }
+
+      if (contentType === "plain") {
+        res.setHeader("Content-Type", "text/plain");
+        payloadString = typeof payload !== undefined ? payload : "";
       }
 
       // return the response parts that are content specific
@@ -158,6 +186,8 @@ server.router = {
   "api/users": users,
   "api/tokens": tokens,
   "api/checks": checks,
+  "favicon.ico": favicon,
+  public: public,
   ping: ping,
 };
 

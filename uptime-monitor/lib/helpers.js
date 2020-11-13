@@ -192,4 +192,23 @@ helpers.interpolate = (str, data) => {
   return str;
 };
 
+// get the contents of a static (public) asset
+helpers.getStaticAsset = (fileName, cb) => {
+  fileName =
+    typeof fileName === "string" && fileName.length > 0 ? fileName : false;
+
+  if (fileName) {
+    const publicDir = path.join(__dirname, "/../public/");
+    fs.readFile(publicDir + fileName, (err, data) => {
+      if (!err && data) {
+        cb(false, data);
+      } else {
+        cb("No file could be found.");
+      }
+    });
+  } else {
+    cb("A valid file name was not specified.");
+  }
+};
+
 module.exports = helpers;
