@@ -89,4 +89,72 @@ app.client.request = (headers, path, method, queryStringObj, payload, cb) => {
   xhr.send(payloadStr);
 };
 
-console.log("Hello Console World!!");
+// Bind the forms
+app.bindForms = () => {
+  document.querySelector("form").addEventListener("submit", (e) => {
+    // Stop it from submitting
+    e.preventDefault();
+    const formId = e.target.id;
+    const path = e.target.action;
+    const method = e.target.method.toUpperCase();
+
+    // Hide the error message (if it's currently shown due to a previous error)
+    document.querySelector("#" + formId + " .formError").style.display =
+      "hidden";
+
+    // Turn the inputs into a payload
+    const payload = {};
+    const inputs = e.target.elements;
+    for (let i = 0; i < inputs.length; i++) {
+      if (inputs[i].type !== "submit") {
+        const valueOfElement =
+          inputs[i].type === "checkbox" ? inputs[i].checked : inputs[i].value;
+        payload[inputs[i].name] = valueOfElement;
+      }
+    }
+
+    // Call the API
+    app.client.request(undefined, path, method, undefined, payload, function (
+      statusCode,
+      responsePayload
+    ) {
+      // Display an error on the form if needed
+      if (statusCode !== 200) {
+        // Try to get the error from the api, or set a default error message
+        const error =
+          typeof responsePayload.Error === "string"
+            ? responsePayload.Error
+            : "An error has occured, please try again";
+
+        // Set the formError field with the error text
+        document.querySelector("#" + formId + " .formError").innerHTML = error;
+
+        // Show (unhide) the form error field on the form
+        document.querySelector("#" + formId + " .formError").style.display =
+          "block";
+      } else {
+        // If successful, send to form response processor
+        app.formResponseProcessor(formId, payload, responsePayload);
+      }
+    });
+  });
+};
+
+// Form response processor
+app.formResponseProcessor = (formId, requestPayload, responsePayload) => {
+  var functionToCall = false;
+  if (formId === "accountCreate") {
+    // @TODO Do something here now that the account has been created successfully
+  }
+};
+
+// Init (bootstrapping)
+app.init = () => {
+  // Bind all form submissions
+  app.bindForms();
+};
+
+// Call the init processes after the window loads
+window.onload = () => {
+  app.init();
+};

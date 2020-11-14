@@ -36,6 +36,37 @@ handlers.index = (data, cb) => {
   }
 };
 
+// Create account
+handlers.accountCreate = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Uptime Monitoring - Made Simple",
+      "head.description": "Sign up is easy and only takes a few seconds.",
+      "body.class": "accountCreate",
+    };
+
+    // read in a template as a string
+    helpers.getTemplate("accountCreate", templateData, (err, str) => {
+      if (!err && str) {
+        // add the universal header and footer
+        helpers.addUniversalTemplate(str, templateData, (err, str) => {
+          if (!err && str) {
+            cb(200, str, "html");
+          } else {
+            cb(500, undefined, "html");
+          }
+        });
+      } else {
+        cb(500, undefined, "html");
+      }
+    });
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
 // favicon
 handlers.favicon = (data, cb) => {
   // reject any request that isn't GET
@@ -93,7 +124,6 @@ handlers.public = (data, cb) => {
   }
 };
 
-handlers.accountCreate = () => {};
 handlers.accountEdit = () => {};
 handlers.accountDeleted = () => {};
 handlers.sessionCreate = () => {};
