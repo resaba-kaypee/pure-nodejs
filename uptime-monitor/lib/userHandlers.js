@@ -131,7 +131,7 @@ handlers._users.get = (data, cb) => {
       }
     });
   } else {
-    cb(400, { Error: "Missing required field." });
+    cb(400, { Error: "Missing required field-GET." });
   }
 };
 
@@ -213,7 +213,7 @@ handlers._users.put = (data, cb) => {
       cb(400, { Error: "Missing field to update." });
     }
   } else {
-    cb(400, { Error: "Missing required fields." });
+    cb(400, { Error: "Missing required fields-PUT." });
   }
 };
 
@@ -290,7 +290,7 @@ handlers._users.delete = (data, cb) => {
       }
     });
   } else {
-    cb(400, { Error: "Missing required field." });
+    cb(400, { Error: "Missing required field-DELETE." });
   }
 };
 
