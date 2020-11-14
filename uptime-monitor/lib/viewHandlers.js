@@ -4,6 +4,23 @@ const helpers = require("./helpers");
 
 const handlers = {};
 
+const readTemplate = (htmlTemplate, templateData, cb) => {
+  helpers.getTemplate(htmlTemplate, templateData, (err, str) => {
+    if (!err && str) {
+      // add the universal header and footer
+      helpers.addUniversalTemplate(str, templateData, (err, str) => {
+        if (!err && str) {
+          cb(200, str, "html");
+        } else {
+          cb(500, undefined, "html");
+        }
+      });
+    } else {
+      cb(500, undefined, "html");
+    }
+  });
+};
+
 // index handlers
 handlers.index = (data, cb) => {
   // reject any request that isn't GET
@@ -15,22 +32,8 @@ handlers.index = (data, cb) => {
         "We offer free, simple uptime monitoring for HTTP/HTTPS sites all kinds. When your site goes down, we'll send you a text to let you know",
       "body.class": "index",
     };
-
     // read in a template as a string
-    helpers.getTemplate("index", templateData, (err, str) => {
-      if (!err && str) {
-        // add the universal header and footer
-        helpers.addUniversalTemplate(str, templateData, (err, str) => {
-          if (!err && str) {
-            cb(200, str, "html");
-          } else {
-            cb(500, undefined, "html");
-          }
-        });
-      } else {
-        cb(500, undefined, "html");
-      }
-    });
+    readTemplate(templateData["body.class"], templateData, cb);
   } else {
     cb(405, undefined, "html");
   }
@@ -48,20 +51,26 @@ handlers.accountCreate = (data, cb) => {
     };
 
     // read in a template as a string
-    helpers.getTemplate("accountCreate", templateData, (err, str) => {
-      if (!err && str) {
-        // add the universal header and footer
-        helpers.addUniversalTemplate(str, templateData, (err, str) => {
-          if (!err && str) {
-            cb(200, str, "html");
-          } else {
-            cb(500, undefined, "html");
-          }
-        });
-      } else {
-        cb(500, undefined, "html");
-      }
-    });
+    readTemplate(templateData["body.class"], templateData, cb);
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
+// Create session
+handlers.sessionCreate = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Log in to your account.",
+      "head.description":
+        "Please enter your phone number and password to access your account.",
+      "body.class": "sessionCreate",
+    };
+
+    // read in a template as a string
+    readTemplate(templateData["body.class"], templateData, cb);
   } else {
     cb(405, undefined, "html");
   }
@@ -126,7 +135,6 @@ handlers.public = (data, cb) => {
 
 handlers.accountEdit = () => {};
 handlers.accountDeleted = () => {};
-handlers.sessionCreate = () => {};
 handlers.sessionDeleted = () => {};
 handlers.checksList = () => {};
 handlers.checksCreate = () => {};
