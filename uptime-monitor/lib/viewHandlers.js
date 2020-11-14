@@ -76,6 +76,24 @@ handlers.sessionCreate = (data, cb) => {
   }
 };
 
+// session deleted
+handlers.sessionDeleted = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Logged Out",
+      "head.description": "You have been logged out of your account.",
+      "body.class": "sessionDeleted",
+    };
+
+    // read in a template as a string
+    readTemplate(templateData["body.class"], templateData, cb);
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
 // favicon
 handlers.favicon = (data, cb) => {
   // reject any request that isn't GET
@@ -135,7 +153,6 @@ handlers.public = (data, cb) => {
 
 handlers.accountEdit = () => {};
 handlers.accountDeleted = () => {};
-handlers.sessionDeleted = () => {};
 handlers.checksList = () => {};
 handlers.checksCreate = () => {};
 handlers.checksEdit = () => {};

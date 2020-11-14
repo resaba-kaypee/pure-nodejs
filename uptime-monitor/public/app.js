@@ -30,7 +30,7 @@ app.client.request = (headers, path, method, queryStringObj, payload, cb) => {
   cb = typeof cb === "function" ? cb : false;
 
   // for each query string parameter sent, add it to the path
-  const requestUrl = path + "?";
+  let requestUrl = path + "?";
   let counter = 0;
 
   for (let queryKey in queryStringObj) {
@@ -87,6 +87,45 @@ app.client.request = (headers, path, method, queryStringObj, payload, cb) => {
   const payloadStr = JSON.stringify(payload);
 
   xhr.send(payloadStr);
+};
+
+// Bind the logout button
+app.bindLogoutButton = () => {
+  document.getElementById("logoutButton").addEventListener("click", (e) => {
+    // Stop it from redirecting anywhere
+    e.preventDefault();
+
+    // Log the user out
+    app.logUserOut();
+  });
+};
+
+// Log the user out then redirect them
+app.logUserOut = () => {
+  // Get the current token id
+  var tokenId =
+    typeof app.config.sessionToken.id == "string"
+      ? app.config.sessionToken.id
+      : false;
+
+  // Send the current token to the tokens endpoint to delete it
+  var queryStringObject = {
+    id: tokenId,
+  };
+  app.client.request(
+    undefined,
+    "api/tokens",
+    "DELETE",
+    queryStringObject,
+    undefined,
+    (statusCode, responsePayload) => {
+      // Set the app.config token as false
+      app.setSessionToken(false);
+
+      // Send the user to the logged out page
+      window.location = "/session/deleted";
+    }
+  );
 };
 
 // Bind the forms
@@ -294,6 +333,15 @@ app.tokenRenewalLoop = () => {
 app.init = () => {
   // Bind all form submissions
   app.bindForms();
+
+  // Bind logout logout button
+  app.bindLogoutButton();
+
+  // Get the token from localstorage
+  app.getSessionToken();
+
+  // Renew token
+  app.tokenRenewalLoop();
 };
 
 // Call the init processes after the window loads
