@@ -10,9 +10,9 @@ handlers.index = (data, cb) => {
   if (data.method === "get") {
     // prepare data for interpolation
     const templateData = {
-      "head.title": "This is the title",
-      "head.description": "This is the description",
-      "body.title": "Hello templated world!",
+      "head.title": "Uptime Monitoring - Made Simple",
+      "head.description":
+        "We offer free, simple uptime monitoring for HTTP/HTTPS sites all kinds. When your site goes down, we'll send you a text to let you know",
       "body.class": "index",
     };
 
