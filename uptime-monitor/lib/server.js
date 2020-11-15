@@ -44,7 +44,7 @@ server.httpServer = http.createServer((req, res) => {
 // instantiate "https" server
 server.httpsServerOption = {
   cert: fs.readFileSync(path.join(__dirname, "/../https/cert.pem")),
-  key: fs.readFileSync(path.join(__dirname, "../https/key.pem")),
+  key: fs.readFileSync(path.join(__dirname, "/../https/key.pem")),
 };
 
 server.httpsServer = https.createServer(
@@ -130,24 +130,24 @@ server.unifiedServer = (req, res) => {
 
       if (contentType === "favicon") {
         res.setHeader("Content-Type", "image/x-icon");
-        payloadString = typeof payload !== undefined ? payload : "";
+        payloadString = typeof payload !== "undefined" ? payload : "";
       }
       if (contentType === "css") {
         res.setHeader("Content-Type", "text/css");
-        payloadString = typeof payload !== undefined ? payload : "";
+        payloadString = typeof payload !== "undefined" ? payload : "";
       }
       if (contentType === "png") {
         res.setHeader("Content-Type", "image/png");
-        payloadString = typeof payload !== undefined ? payload : "";
+        payloadString = typeof payload !== "undefined" ? payload : "";
       }
       if (contentType === "jpg") {
         res.setHeader("Content-Type", "image/jpeg");
-        payloadString = typeof payload !== undefined ? payload : "";
+        payloadString = typeof payload !== "undefined" ? payload : "";
       }
 
       if (contentType === "plain") {
         res.setHeader("Content-Type", "text/plain");
-        payloadString = typeof payload !== undefined ? payload : "";
+        payloadString = typeof payload !== "undefined" ? payload : "";
       }
 
       // return the response parts that are content specific

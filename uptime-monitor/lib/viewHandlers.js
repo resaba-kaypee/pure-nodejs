@@ -12,10 +12,12 @@ const readTemplate = (htmlTemplate, templateData, cb) => {
         if (!err && str) {
           cb(200, str, "html");
         } else {
+          console.log(err);
           cb(500, undefined, "html");
         }
       });
     } else {
+      console.log(err);
       cb(500, undefined, "html");
     }
   });
@@ -86,7 +88,6 @@ handlers.sessionDeleted = (data, cb) => {
       "head.description": "You have been logged out of your account.",
       "body.class": "sessionDeleted",
     };
-
     // read in a template as a string
     readTemplate(templateData["body.class"], templateData, cb);
   } else {
@@ -123,6 +124,24 @@ handlers.accountDeleted = (data, cb) => {
     };
 
     // read in a template as a string
+    readTemplate(templateData["body.class"], templateData, cb);
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
+// create a new check
+handlers.checksCreate = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Create a new check",
+      "body.class": "checksCreate",
+    };
+
+    // read in a template as a string
+    console.log("Im in");
     readTemplate(templateData["body.class"], templateData, cb);
   } else {
     cb(405, undefined, "html");
@@ -185,9 +204,5 @@ handlers.public = (data, cb) => {
     cb(405);
   }
 };
-
-handlers.checksList = () => {};
-handlers.checksCreate = () => {};
-handlers.checksEdit = () => {};
 
 module.exports = handlers;
