@@ -6,6 +6,7 @@
 // Container for frontend application
 const app = {};
 
+// config
 app.config = {
   sessionToken: false,
 };
@@ -164,12 +165,15 @@ app.bindForms = () => {
           }
         }
 
+        // If the method is DELETE, the payload should be a queryStringObject instead
+        const queryStringObject = method == "DELETE" ? payload : {};
+
         // Call the API
         app.client.request(
           undefined,
           path,
           method,
-          undefined,
+          queryStringObject,
           payload,
           (statusCode, responsePayload) => {
             // Display an error on the form if needed
@@ -247,10 +251,16 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
   }
 
   // If forms saved successfully and they have success messages, show them
-  var formsWithSuccessMessages = ["accountEdit1", "accountEdit2"];
+  const formsWithSuccessMessages = ["accountEdit1", "accountEdit2"];
   if (formsWithSuccessMessages.indexOf(formId) > -1) {
     document.querySelector("#" + formId + " .formSuccess").style.display =
       "block";
+  }
+
+  // If the user just deleted their account, redirect them to the account-delete page
+  if (formId == "accountEdit3") {
+    app.logUserOut(false);
+    window.location = "/account/deleted";
   }
 };
 
@@ -347,17 +357,6 @@ app.renewToken = (cb) => {
   }
 };
 
-// Loop to renew token often
-app.tokenRenewalLoop = () => {
-  setInterval(() => {
-    app.renewToken((err) => {
-      if (!err) {
-        console.log("Token renewed successfully @ " + Date.now());
-      }
-    });
-  }, 1000 * 60);
-};
-
 // Load data on the page
 app.loadDataOnPage = () => {
   // Get the current page from the body class
@@ -415,6 +414,17 @@ app.loadAccountEditPage = () => {
   } else {
     app.logUserOut();
   }
+};
+
+// Loop to renew token often
+app.tokenRenewalLoop = () => {
+  setInterval(() => {
+    app.renewToken((err) => {
+      if (!err) {
+        console.log("Token renewed successfully @ " + Date.now());
+      }
+    });
+  }, 1000 * 60);
 };
 
 // Init (bootstrapping)

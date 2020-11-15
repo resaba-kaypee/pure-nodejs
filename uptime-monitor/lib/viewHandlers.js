@@ -111,6 +111,24 @@ handlers.accountEdit = (data, cb) => {
   }
 };
 
+// account has been deleted
+handlers.accountDeleted = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Account Deleted",
+      "head.description": "Your account has been deleted.",
+      "body.class": "accountDeleted",
+    };
+
+    // read in a template as a string
+    readTemplate(templateData["body.class"], templateData, cb);
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
 // favicon
 handlers.favicon = (data, cb) => {
   // reject any request that isn't GET
@@ -168,7 +186,6 @@ handlers.public = (data, cb) => {
   }
 };
 
-handlers.accountDeleted = () => {};
 handlers.checksList = () => {};
 handlers.checksCreate = () => {};
 handlers.checksEdit = () => {};
