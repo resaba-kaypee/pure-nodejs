@@ -141,7 +141,23 @@ handlers.checksCreate = (data, cb) => {
     };
 
     // read in a template as a string
-    console.log("Im in");
+    readTemplate(templateData["body.class"], templateData, cb);
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
+// view all checks
+handlers.checksList = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Dashboard",
+      "body.class": "checksList",
+    };
+
+    // read in a template as a string
     readTemplate(templateData["body.class"], templateData, cb);
   } else {
     cb(405, undefined, "html");
