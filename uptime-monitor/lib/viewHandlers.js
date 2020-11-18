@@ -164,6 +164,23 @@ handlers.checksList = (data, cb) => {
   }
 };
 
+// edit checks
+handlers.checksEdit = (data, cb) => {
+  // reject any request that isn't GET
+  if (data.method === "get") {
+    // prepare data for interpolation
+    const templateData = {
+      "head.title": "Check Details",
+      "body.class": "checksEdit",
+    };
+
+    // read in a template as a string
+    readTemplate(templateData["body.class"], templateData, cb);
+  } else {
+    cb(405, undefined, "html");
+  }
+};
+
 // favicon
 handlers.favicon = (data, cb) => {
   // reject any request that isn't GET

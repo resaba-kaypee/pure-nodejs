@@ -181,6 +181,10 @@ app.bindForms = () => {
               if (nameOfElement === "httpmethod") {
                 nameOfElement = "method";
               }
+              // Create an payload field named "id" if the elements name is actually uid
+              if (nameOfElement == "uid") {
+                nameOfElement = "id";
+              }
               // If the element has the class "multiselect" add its value(s) as array elements
               if (classOfElement.indexOf("multiselect") > -1) {
                 if (elementIsChecked) {
@@ -284,7 +288,11 @@ app.formResponseProcessor = function (formId, requestPayload, responsePayload) {
   }
 
   // If forms saved successfully and they have success messages, show them
-  const formsWithSuccessMessages = ["accountEdit1", "accountEdit2"];
+  const formsWithSuccessMessages = [
+    "accountEdit1",
+    "accountEdit2",
+    "checksEdit1",
+  ];
   if (formsWithSuccessMessages.indexOf(formId) > -1) {
     document.querySelector("#" + formId + " .formSuccess").style.display =
       "block";
