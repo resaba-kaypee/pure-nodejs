@@ -9,6 +9,7 @@ const debug = util.debuglog("cli");
 const events = require("events");
 const os = require("os");
 const v8 = require("v8");
+const _data = require("./data");
 
 class _events extends events {}
 const e = new _events();
@@ -199,12 +200,48 @@ cli.responders.stats = () => {
 
 // list user
 cli.responders.listUsers = () => {
-  console.log("You asked for list users.");
+  _data.list("users", (err, userIds) => {
+    if (!err && userIds && userIds.length > 0) {
+      cli.verticalSpace();
+      userIds.forEach((userId) => {
+        _data.read("users", userId, (err, userData) => {
+          if (!err && userData) {
+            let line = `Name: ${userData.firstName} ${userData.lastName} Phone: ${userData.phone} Checks: `;
+            const numChecks =
+              typeof userData.checks === "object" &&
+              userData.checks instanceof Array &&
+              userData.checks.length > 0
+                ? userData.checks.length
+                : 0;
+            line += numChecks;
+            console.log(line);
+            cli.verticalSpace();
+          }
+        });
+      });
+    }
+  });
 };
 
 // more user info
 cli.responders.moreUserInfo = (str) => {
-  console.log("You asked for more user info.", str);
+  const arr = str.split("--");
+  const userId =
+    typeof arr[1] === "string" && arr[1].trim().length > 0
+      ? arr[1].trim()
+      : false;
+  if (userId) {
+    _data.read("users", userId, (err, userData) => {
+      if (!err && userData) {
+        // remove tha hashed password first
+        delete userData.hashedPassword;
+
+        // print the JSON with the test highlightinh
+        console.dir(userData, { colors: true });
+        cli.verticalSpace();
+      }
+    });
+  }
 };
 
 // list checks
