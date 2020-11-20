@@ -10,6 +10,8 @@ const events = require("events");
 const os = require("os");
 const v8 = require("v8");
 const _data = require("./data");
+const _logs = require("./logs");
+const _helpers = require("./helpers");
 
 class _events extends events {}
 const e = new _events();
@@ -76,7 +78,7 @@ cli.responders.help = () => {
       "Show a list of all the active checks is the system, including their state. The --up and --down flags are optional.",
     "more checks info --{checkId}": "Show details of specified check.",
     "list logs":
-      "Show the list of all the log files available to be read (compressed) and (uncompressed)",
+      "Show the list of all the log files available to be read (compressed only)",
     "more log info --{fileName}": "Show details of specified log file.",
   };
 
@@ -300,12 +302,44 @@ cli.responders.moreChecksInfo = (str) => {
 
 // list logs
 cli.responders.listLogs = () => {
-  console.log("You asked for logs.");
+  _logs.list(true, (err, logFileNames) => {
+    if (!err && logFileNames && logFileNames.length > 0) {
+      cli.verticalSpace();
+      logFileNames.forEach((logFileName) => {
+        if (logFileName.indexOf("-") > -1) {
+          console.log(logFileName);
+          cli.verticalSpace();
+        }
+      });
+    }
+  });
 };
 
 // more log info
 cli.responders.moreLogInfo = (str) => {
-  console.log("You asked for more log info.", str);
+  const arr = str.split("--");
+  const logFileName =
+    typeof arr[1] === "string" && arr[1].trim().length > 0
+      ? arr[1].trim()
+      : false;
+  // look up check
+  if (logFileName) {
+    cli.verticalSpace();
+    // decompressed the log file
+    _logs.decompress(logFileName, (err, strData) => {
+      if (!err && strData) {
+        // split into lines
+        const arr = strData.split("\n");
+        arr.forEach((jsonStr) => {
+          const logObject = _helpers.parseJsonToObject(jsonStr);
+          if (logObject && JSON.stringify(logObject) !== "{}") {
+            console.dir(logObject, { colors: true });
+            cli.verticalSpace();
+          }
+        });
+      }
+    });
+  }
 };
 
 // input processesor

@@ -108,14 +108,14 @@ lib.decompress = (fileId, cb) => {
 
   fs.readFile(lib.baseDir + fileName, "utf8", (err, str) => {
     if (!err && str) {
-      // decompress
-      const inputBuffer = Buffer.from(str);
+      // inflate the data
+      const inputBuffer = Buffer.from(str, "base64");
       zlib.unzip(inputBuffer, (err, outputBuffer) => {
-        if (!err && inputBuffer) {
+        if (!err && outputBuffer) {
           const str = outputBuffer.toString();
           cb(false, str);
         } else {
-          cb(errr);
+          cb(err);
         }
       });
     } else {
