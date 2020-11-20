@@ -14,4 +14,10 @@ const notFound = (data, cb) => {
   cb(404);
 };
 
-module.exports = { ping, notFound, users, tokens, checks };
+// example error
+const exampleError = (data, cb) => {
+  const err = new Error("Example error");
+  throw err;
+};
+
+module.exports = { ping, notFound, users, tokens, checks, exampleError };
