@@ -246,12 +246,56 @@ cli.responders.moreUserInfo = (str) => {
 
 // list checks
 cli.responders.listChecks = (str) => {
-  console.log("You asked to list checks.", str);
+  _data.list("checks", (err, checkIds) => {
+    if (!err && checkIds && checkIds.length > 0) {
+      cli.verticalSpace();
+      checkIds.forEach((checkId) => {
+        _data.read("checks", checkId, (err, checkData) => {
+          const lowerCaseStr = str.toLowerCase();
+
+          // get the state, default to down;
+          const state =
+            typeof checkData.state === "string" ? checkData.state : "down";
+          const stateUnknown =
+            typeof checkData.state === "string" ? checkData.state : "unknown";
+          // if the user specified the state, or hasn't specified any state, include the current check accordingly
+          if (
+            lowerCaseStr.indexOf("--" + state) > -1 ||
+            (lowerCaseStr.indexOf("--down") === -1 &&
+              lowerCaseStr.indexOf("--up") === -1)
+          ) {
+            const line = `ID: ${
+              checkData.id
+            } ${checkData.method.toUpperCase()} ${checkData.protocol}//:${
+              checkData.url
+            } ${stateUnknown}`;
+            console.log(line);
+            cli.verticalSpace();
+          }
+        });
+      });
+    }
+  });
 };
 
 // more checks
 cli.responders.moreChecksInfo = (str) => {
-  console.log("You asked for more check info.", str);
+  const arr = str.split("--");
+  const checkId =
+    typeof arr[1] === "string" && arr[1].trim().length > 0
+      ? arr[1].trim()
+      : false;
+  // look up check
+  if (checkId) {
+    _data.read("checks", checkId, (err, checkData) => {
+      if (!err && checkData) {
+        // print the JSON with the test highlightinh
+        cli.verticalSpace();
+        console.dir(checkData, { colors: true });
+        cli.verticalSpace();
+      }
+    });
+  }
 };
 
 // list logs
