@@ -175,7 +175,7 @@ workers.performCheck = (originalCheckData) => {
       value: timeout,
     };
 
-    if (!outComeSent) {
+    if (!outcomeSent) {
       workers.processCheckOutcome(originalCheckData, checkOutcome);
       outcomeSent = true;
     }

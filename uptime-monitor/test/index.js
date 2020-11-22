@@ -2,37 +2,18 @@
  * Test runner
  */
 
-const _helpers = require("../lib/helpers");
-const assert = require("assert");
+// override the NODE_ENV for testing
+process.env.NODE_ENV = "testing";
 
 // application logic for test runner
 _app = {};
 
 // container for test
-_app.tests = {
-  unit: {},
-};
+_app.tests = {};
 
-// assert that getANumber function is returning a number
-_app.tests.unit["helpers.getANumber should return a number"] = (done) => {
-  const val = _helpers.getANnumber();
-  assert.strictEqual(typeof val, "number");
-  done();
-};
-
-// assert that getANumber function is returning a 1
-_app.tests.unit["helpers.getANumber should return 1"] = (done) => {
-  const val = _helpers.getANnumber();
-  assert.strictEqual(val, 1);
-  done();
-};
-
-// assert that getANumber function is returning a 2
-_app.tests.unit["helpers.getANumber should return 2"] = (done) => {
-  const val = _helpers.getANnumber();
-  assert.strictEqual(val, 2);
-  done();
-};
+// add on the unit test
+_app.tests.unit = require("./unit");
+_app.tests.api = require("./api");
 
 // to count all test
 _app.countTests = () => {
@@ -123,6 +104,7 @@ _app.produceReport = (limit, successes, errors) => {
 
   console.log("");
   console.log("--------------END TEST REPORT--------------");
+  process.exit(0);
 };
 
 _app.runTests();

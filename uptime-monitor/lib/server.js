@@ -235,7 +235,7 @@ server.init = () => {
   server.httpServer.listen(httpPort, () => {
     console.log(
       "\x1b[35m%s\x1b[0m",
-      `Listening on port ${httpPort} in ${envName} mode...`
+      `The HTTP server is running on port ${httpPort}...`
     );
   });
 
@@ -243,7 +243,7 @@ server.init = () => {
   server.httpsServer.listen(httpsPort, () => {
     console.log(
       "\x1b[36m%s\x1b[0m",
-      `Listening on port ${httpsPort} in ${envName} mode...`
+      `The HTTPS server is running on port ${httpsPort}...`
     );
   });
 };

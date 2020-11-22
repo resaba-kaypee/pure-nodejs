@@ -23,6 +23,26 @@ environments.staging = {
   },
 };
 
+// testing env
+environments.testing = {
+  httpPort: 4000,
+  httpsPort: 4001,
+  envName: "testing",
+  hashingSecret: "SS:gdf09gD8sd9GDf783s3df",
+  maxChecks: 5,
+  twilio: {
+    accountSid: "AC3b02dcfe4f71a4cb06f88aff61174908",
+    authToken: "2713bfd392a410aeaf0885d14b2b428f",
+    fromPhone: "+12056795175",
+  },
+  templateGlobals: {
+    appName: "UptimeChecker",
+    companyName: "NotARealCompany, Inc.",
+    yearCreated: "2020",
+    baseUrl: "http://localhost:4000/",
+  },
+};
+
 // production env
 environments.production = {
   httpPort: 5000,

@@ -7,7 +7,6 @@ const example = {};
 
 example.init = () => {
   const foo = bar;
-  console.log(foo);
 };
 
 module.exports = example;
