@@ -9,6 +9,11 @@ const fs = require("fs");
 // helper containers
 const helpers = {};
 
+// a sample for testinf that simply return a number
+helpers.getANnumber = () => {
+  return 1;
+};
+
 // create a sha256 hash
 helpers.hash = (str) => {
   if (typeof str === "string" && str.length > 0) {
