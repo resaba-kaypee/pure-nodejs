@@ -1,4 +1,6 @@
 // dependencies
+const _url = requireL("url");
+const dns = require("dns");
 const _data = require("./data");
 const helpers = require("./helpers");
 const config = require("../lib/config");
@@ -78,40 +80,58 @@ handlers._checks.post = (data, cb) => {
 
             // verify that the user has less than the number of max-checks-per user
             if (checks.length < config.maxChecks) {
-              // create random id for checks
-              const checkId = helpers.createRandomStr(20);
+              // verify that the URL given has DNS entries (and therfore can resolve)
+              const parsedUrl = _url.parse(`${protocol}://${url}`, true);
+              const hostName =
+                typeof parsedUrl.hostname === "string" &&
+                parsedUrl.hostname.length > 0
+                  ? parsedUrl.hostname
+                  : false;
 
-              // create the user object and include the users phone
-              const checkObj = {
-                id: checkId,
-                userPhone: userPhone,
-                protocol: protocol,
-                url: url,
-                method: method,
-                successCodes: successCodes,
-                timeoutSeconds: timeoutSeconds,
-              };
+              dns.resolve(hostName, (err, records) => {
+                if (!err && records) {
+                  // create random id for checks
+                  const checkId = helpers.createRandomStr(20);
 
-              // store the object
-              _data.create("checks", checkId, checkObj, (err) => {
-                if (!err) {
-                  // add the check id to the user's object
-                  userData.checks = checks;
-                  userData.checks.push(checkId);
+                  // create the user object and include the users phone
+                  const checkObj = {
+                    id: checkId,
+                    userPhone: userPhone,
+                    protocol: protocol,
+                    url: url,
+                    method: method,
+                    successCodes: successCodes,
+                    timeoutSeconds: timeoutSeconds,
+                  };
 
-                  // save the new user data
-                  _data.update("users", userPhone, userData, (err) => {
+                  // store the object
+                  _data.create("checks", checkId, checkObj, (err) => {
                     if (!err) {
-                      // return the data about the new check
-                      cb(200, checkObj);
-                    } else {
-                      cb(500, {
-                        Error: "Could not update the user with the new check.",
+                      // add the check id to the user's object
+                      userData.checks = checks;
+                      userData.checks.push(checkId);
+
+                      // save the new user data
+                      _data.update("users", userPhone, userData, (err) => {
+                        if (!err) {
+                          // return the data about the new check
+                          cb(200, checkObj);
+                        } else {
+                          cb(500, {
+                            Error:
+                              "Could not update the user with the new check.",
+                          });
+                        }
                       });
+                    } else {
+                      cb(500, err, { Error: "Could not create new check." });
                     }
                   });
                 } else {
-                  cb(500, err, { Error: "Could not create new check." });
+                  cb(400, {
+                    Error:
+                      "The hostname of the URL entered did not resolve to any DNS entries",
+                  });
                 }
               });
             } else {
