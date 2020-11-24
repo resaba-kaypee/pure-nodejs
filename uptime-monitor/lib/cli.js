@@ -9,6 +9,7 @@ const debug = util.debuglog("cli");
 const events = require("events");
 const os = require("os");
 const v8 = require("v8");
+const childProcess = require("child_process");
 const _data = require("./data");
 const _logs = require("./logs");
 const _helpers = require("./helpers");
@@ -302,16 +303,22 @@ cli.responders.moreChecksInfo = (str) => {
 
 // list logs
 cli.responders.listLogs = () => {
-  _logs.list(true, (err, logFileNames) => {
-    if (!err && logFileNames && logFileNames.length > 0) {
-      cli.verticalSpace();
-      logFileNames.forEach((logFileName) => {
-        if (logFileName.indexOf("-") > -1) {
-          console.log(logFileName);
-          cli.verticalSpace();
-        }
-      });
-    }
+  const ls = childProcess.spawn("ls", ["./.logs/"]);
+  ls.stdout.on("data", (dataObj) => {
+    // explode into separate line
+    const dataStr = dataObj.toString();
+    const logFileNames = dataStr.split("\n");
+    cli.verticalSpace();
+    logFileNames.forEach((logFileName) => {
+      if (
+        typeof logFileName === "string" &&
+        logFileNames.length > 0 &&
+        logFileName.indexOf("-") > -1
+      ) {
+        console.log(logFileName.trim().split(".")[0]);
+        cli.verticalSpace();
+      }
+    });
   });
 };
 
