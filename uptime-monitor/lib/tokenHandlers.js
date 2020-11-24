@@ -1,8 +1,19 @@
 // handler for token
 
 // dependencies
+const { performance, PerformanceObserver } = require("perf_hooks");
+const util = require("util");
+const debug = util.debuglog("performance");
 const _data = require("./data");
 const helpers = require("./helpers");
+
+const perfObserver = new PerformanceObserver((items) => {
+  items.getEntries().forEach((entry) => {
+    debug("\x1b[33m%s\x1b[0m", `${entry.name}: ${entry.duration}`);
+  });
+});
+
+perfObserver.observe({ entryTypes: ["measure"], buffer: true });
 
 // const define handler container
 const handlers = {};
@@ -24,6 +35,7 @@ handlers._tokens = {};
 // required data: phone, password
 // optional: none
 handlers._tokens.post = (data, cb) => {
+  performance.mark("entered function");
   const phone =
     typeof data.payload.phone === "string" &&
     data.payload.phone.trim().length === 10
@@ -36,15 +48,23 @@ handlers._tokens.post = (data, cb) => {
       ? data.payload.password.trim()
       : false;
 
+  performance.mark("inputs validated");
   if (phone && password) {
     // look up user that match phone
     _data.read("users", phone, (err, userData) => {
+      performance.mark("beginning user lookup");
       if (!err && userData) {
+        performance.mark("user lookup complete");
+
         // hashed the sent password to compare
+        performance.mark("begin hashing password");
         const hashedPassword = helpers.hash(password);
+        performance.mark("password hashing complete");
 
         if (hashedPassword === userData.hashedPassword) {
           // create token with random name. set expiration day to 1 hour
+
+          performance.mark("creating data for token");
           const tokenId = helpers.createRandomStr(20);
           const expires = Date.now() + 1000 * 60 * 60;
 
@@ -55,7 +75,43 @@ handlers._tokens.post = (data, cb) => {
           };
 
           // store new token
+          performance.mark("begin storing token");
           _data.create("tokens", tokenId, tokenObj, (err) => {
+            performance.mark("storing token complete");
+
+            // ===>>> begin gather all measurement
+            performance.measure(
+              "Beginning to end",
+              "entered function",
+              "storing token complete"
+            );
+            performance.measure(
+              "Validating user inputs",
+              "entered function",
+              "inputs validated"
+            );
+            performance.measure(
+              "User lookup",
+              "beginning user lookup",
+              "user lookup complete"
+            );
+            performance.measure(
+              "Password hashing",
+              "begin hashing password",
+              "password hashing complete"
+            );
+            performance.measure(
+              "Token data creation",
+              "creating data for token",
+              "begin storing token"
+            );
+            performance.measure(
+              "Token storing",
+              "begin storing token",
+              "storing token complete"
+            );
+            // ===>>> end gather all measurement
+
             if (!err) {
               cb(200, tokenObj);
             } else {

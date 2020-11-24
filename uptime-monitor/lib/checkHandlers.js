@@ -1,5 +1,5 @@
 // dependencies
-const _url = requireL("url");
+const _url = require("url");
 const dns = require("dns");
 const _data = require("./data");
 const helpers = require("./helpers");
